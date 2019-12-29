@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 
 	"github.com/yrpc/yrpc"
 )
@@ -17,51 +18,61 @@ const (
 )
 
 func main() {
+	for range time.Tick(time.Second) {
+		err := connect()
+		log.Println(err)
+	}
+}
+
+func connect() error {
 	conn, err := net.Dial("tcp", ":8000")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	conn.Write([]byte("GET /hijack HTTP/1.1\r\nHost: localhost:8000\r\n\r\n"))
 
 	ioutil.ReadAll(io.LimitReader(conn, 1))
 
-	/*
-		handler := yrpc.HandlerFunc(func(w yrpc.FrameWriter, r *yrpc.RequestFrame) {
-			log.Println("Handler invoked")
-			for {
-				f := <-r.FrameCh()
-			}
-		})
-	*/
-
 	conf := yrpc.ClientConfig{
 		OverlayNetwork: func(addr string, dc yrpc.DialConfig) (net.Conn, error) { return conn, nil },
-		// Handler:        handler,
 	}
 
-	yconn, _ := yrpc.NewConnection("-", conf, nil)
+	yconn, err := yrpc.NewConnection("-", conf, nil)
+	if err != nil {
+		return err
+	}
 	log.Println("sending Ping")
 
-	// _, resp, _ := yconn.Request(Ping, 0, nil)
-	w, resp, _ := yconn.StreamRequest(Ping, 0, nil)
+	w, resp, err := yconn.StreamRequest(Ping, 0, nil)
+	if err != nil {
+		return err
+	}
 	w.StartWrite(Ping)
 	w.EndWrite(false)
-	frame, _ := resp.GetFrame()
+	frame, err := resp.GetFrame()
+	if err != nil {
+		return err
+	}
 	log.Println("Response received", string(frame.Payload))
+
 	for {
 		f := <-frame.FrameCh()
+		if f == nil {
+			log.Println("error: connection closed. Reconnect")
+			break
+		}
 		payload := string(f.Payload)
 		cmd := ""
 		switch f.Cmd {
 		case Ping:
-			cmd = "ping"
+			cmd = "Ping"
+			w.StartWrite(Pong)
+			w.WriteBytes([]byte(payload))
+			w.EndWrite(false)
 		default:
 			cmd = "unknown cmd"
 		}
 		log.Println(cmd, payload)
-		w.StartWrite(Pong)
-		w.WriteBytes([]byte(payload))
-		w.EndWrite(false)
 	}
-	select {}
+	return nil
 }
