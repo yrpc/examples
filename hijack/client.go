@@ -26,12 +26,12 @@ func main() {
 	ioutil.ReadAll(io.LimitReader(conn, 1))
 
 	/*
-	handler := yrpc.HandlerFunc(func(w yrpc.FrameWriter, r *yrpc.RequestFrame) {
-		log.Println("Handler invoked")
-		for {
-			f := <-r.FrameCh()
-		}
-	})
+		handler := yrpc.HandlerFunc(func(w yrpc.FrameWriter, r *yrpc.RequestFrame) {
+			log.Println("Handler invoked")
+			for {
+				f := <-r.FrameCh()
+			}
+		})
 	*/
 
 	conf := yrpc.ClientConfig{

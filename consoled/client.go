@@ -31,9 +31,9 @@ func main() {
 			}
 			log.Println(cmd, "received with payload:", payload)
 			/*
-			w.StartWrite(frame.RequestID, ClientRespCmd, 0)
-			w.WriteBytes([]byte("client resp"))
-			w.EndWrite()
+				w.StartWrite(frame.RequestID, ClientRespCmd, 0)
+				w.WriteBytes([]byte("client resp"))
+				w.EndWrite()
 			*/
 		}),
 	}
@@ -41,5 +41,5 @@ func main() {
 		fmt.Println(string(frame.Payload))
 	})
 	conn.Request(HelloRequest, yrpc.NBFlag, []byte("xu "))
-	select{}
+	select {}
 }

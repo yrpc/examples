@@ -77,7 +77,7 @@ func main() {
 		<-r.FrameCh()
 
 		quit := make(chan struct{})
-		go func (){
+		go func() {
 			for {
 				f := <-r.FrameCh()
 				if f == nil {
