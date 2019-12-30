@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"crypto/tls"
 	"time"
 
 	"github.com/yrpc/yrpc"
@@ -19,20 +20,27 @@ const (
 
 func main() {
 	for range time.Tick(time.Second) {
-		err := connect()
+		err := ConnectAndServe()
 		log.Println(err)
 	}
 }
 
-func connect() error {
-	conn, err := net.Dial("tcp", ":8000")
+func ConnectAndServe() error {
+	// dial
+	// conn, err := tls.Dial("tcp", ":8884")
+	conn, err := tls.Dial("tcp", "libredot.com:https", nil)
 	if err != nil {
 		return err
 	}
-	conn.Write([]byte("GET /hijack HTTP/1.1\r\nHost: localhost:8000\r\n\r\n"))
 
+	// connect
+	conn.Write([]byte("GET /api/yrpc HTTP/1.1\r\nHost: localhost:8000\r\n\r\n"))
+	// conn.Write([]byte("GET /hijack HTTP/1.1\r\nHost: localhost:8000\r\n\r\n"))
+
+	// connect - confirm
 	ioutil.ReadAll(io.LimitReader(conn, 1))
 
+	// dial2
 	conf := yrpc.ClientConfig{
 		OverlayNetwork: func(addr string, dc yrpc.DialConfig) (net.Conn, error) { return conn, nil },
 	}
@@ -43,18 +51,24 @@ func connect() error {
 	}
 	log.Println("sending Ping")
 
+	// connect2
 	w, resp, err := yconn.StreamRequest(Ping, 0, nil)
 	if err != nil {
 		return err
 	}
 	w.StartWrite(Ping)
+	// # TODO change this part to sending client info
+	// w.WriteBytes(...)
 	w.EndWrite(false)
+
+	// connect2 confirm
 	frame, err := resp.GetFrame()
 	if err != nil {
 		return err
 	}
 	log.Println("Response received", string(frame.Payload))
 
+	// serve
 	for {
 		f := <-frame.FrameCh()
 		if f == nil {

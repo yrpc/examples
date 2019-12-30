@@ -32,7 +32,7 @@ func (l *lys) SetDeadline(t time.Time) error {
 }
 
 func (l *lys) Accept() (net.Conn, error) {
-	return (<-l.conns).(*wrap.Conn).TCPConn, nil
+	return <-l.conns, nil
 }
 
 func (l *lys) Close() error {
