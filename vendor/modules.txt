@@ -1,6 +1,6 @@
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
-# github.com/btwiuse/conntroll v0.0.0-19700101000000-0b8be5df3abb
+# github.com/btwiuse/conntroll v0.0.0-19700101000000-1a68b1972e3d
 ## explicit
 github.com/btwiuse/conntroll/pkg/wrap
 # github.com/containerd/console v0.0.0-20191219165238-8375c3424e4d
